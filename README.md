@@ -2,7 +2,7 @@
 
 Deriva 是一个面向大学本科生的 Windows 桌面 AI 学习助手，用来辅助阅读经典教材、公开课和其他课外高质量资料时的自学。名称取自 **derivation**：知识从主干推导、衍生出枝杈，对应产品的核心形态——树状对话。
 
-当前发布版本：`v1.0.0`。产品范围见 [PRD](doc/product/PRD.md)，v1 功能契约见 [Spec 0001](doc/specs/0001-tree-chat.md)。
+产品范围见 [PRD](doc/product/PRD.md)。Windows 安装包可在 [GitHub Releases](https://github.com/firefly-nightglow/AI-tutor_deriva/releases) 下载。
 
 ## 解决的痛点
 
@@ -14,7 +14,7 @@ Deriva 是一个面向大学本科生的 Windows 桌面 AI 学习助手，用来
 
 ## 当前范围
 
-v1.0.0 已实现：
+已实现：
 
 - 完整树状对话：主对话、子对话、子子对话，以及基于选中 AI 输出内容创建分支。
 - 树状侧栏、对话书签、单对话链路图、多面板并排对照。
@@ -23,10 +23,17 @@ v1.0.0 已实现：
 - 本地 SQLite 持久化，应用重启后恢复科目、对话树、消息、书签和引用关系。
 - 教学系统提示词 v0.1，以及浅色、深色和跟随系统主题。
 
-以下能力已列入产品路线图，但 **v1.0.0 尚未实现**：
+桌面阅读与截图提问也已实现：
 
-- 屏幕边缘吸附悬浮窗、全局热键和窗口级分屏。
-- 屏幕感知、截图提问、选中屏幕内容提问。
+- 左右贴边全高悬浮抽屉、快捷气泡、托盘召回、全局热键和单实例恢复。
+- 选择屏幕或窗口后全幅/区域截图提问，截图预览放大、历史缩略图与可选原图保留。
+- 内嵌资料面板支持网页、视频网站、PDF、Markdown、文本、缩放和内部截图。受登录、DRM 或网站策略限制的内容可用外部应用打开。
+- 选择一个外部应用与抽屉并排，拖动调整宽度，收起或退出时还原；Windows x64 原生窗口适配器运行在独立 utility process。
+- 图像通过视觉模型 API 发送，发送前可预览并取消；外部并排本身只控制窗口几何，不读取或上传画面。
+
+后续规划，尚未实现：
+
+- 后台持续屏幕读取、音频转写与全局学习记忆入口。
 - 视频字幕提取、纪要式总结、思维导图、自动出题、费曼模式、知识画像。
 - 跨主对话的全局链路图、对话搜索和标签系统。
 
@@ -42,7 +49,7 @@ v1.0.0 已实现：
 ## 环境要求
 
 - Windows 10/11 x64。
-- Node.js `^20.19.0` 或 `>=22.12.0`；推荐使用当前 Node.js 22 LTS。该要求来自项目安装的 Vite 7。
+- Node.js `^20.19.0` 或 `>=22.12.0`；可使用符合此范围的 Node.js 22 或 24。该要求来自项目安装的 Vite 7。
 - npm（随 Node.js 安装即可）。
 - 网络访问：安装依赖时需要下载 Electron 等包；使用应用时需要能够访问 DeepSeek API。
 
@@ -88,7 +95,7 @@ npm install
 Deriva 不内置共用 Key，也不嵌入 DeepSeek 网页版。模型调用使用你自己的 DeepSeek API Key（ADR-0002）。
 
 1. 前往 [DeepSeek 开放平台](https://platform.deepseek.com/) 创建 API Key。
-2. 启动 Deriva，点击右上角的 **设置**。
+2. 启动 Deriva，点击右上角的 **设置**；悬浮模式下从 **更多操作** 打开设置。
 3. 在 **API Key** 输入框中填写 `sk-...`，点击 **保存**。
 4. 新建主对话并发送一个问题，确认能够流式返回回答。
 
@@ -144,13 +151,15 @@ Key 的本地存储行为：
 src/main/          Electron 主进程
   db/              SQLite schema、迁移、仓储与树查询
   llm/             模型客户端、SSE、上下文管线、Key 存储、教学提示词
-  capture/         v2 屏幕感知预留模块
+  capture/         屏幕、窗口、区域和资料面板截图
+  material/        内嵌资料浏览与文件访问
+  tiling/          外部窗口并排、恢复与隔离 worker
   session/         v3 学习会话预留模块
 src/preload/       contextBridge 类型安全桥接
 src/renderer/      React 界面、树状侧栏、书签、链路图和多面板
 src/shared/        主进程与渲染进程共用类型、IPC 通道和 API 契约
 doc/               PRD、Spec、ADR、任务、调研和验收记录
-.agentic/          各任务评审留痕
+.agentic/          本地评审留痕（不随发布提交）
 ```
 
 ## 文档
@@ -158,6 +167,9 @@ doc/               PRD、Spec、ADR、任务、调研和验收记录
 - [产品需求文档](doc/product/PRD.md)
 - [v1 树状对话规格](doc/specs/0001-tree-chat.md)
 - [v1 验收走查](doc/product/v1-acceptance-walkthrough.md)
+- [截图提问规格](doc/specs/0002-screen-capture-questions.md)
+- [悬浮窗与资料面板规格](doc/specs/0003-floating-window-split.md)
+- [外部应用并排规格](doc/specs/0004-external-app-tiling.md)
 - [领域词汇 CONTEXT.md](CONTEXT.md)
 - [ADR-0001：Windows 桌面应用形态](doc/adr/0001-desktop-app-form-factor.md)
 - [ADR-0002：仅 API 接入模型](doc/adr/0002-api-only-model-access.md)

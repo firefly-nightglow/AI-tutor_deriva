@@ -1,0 +1,22 @@
+{
+  "coordinate_contract": "Physical pixels for native geometry; original WINDOWPLACEMENT for restoration; 2px visible edge tolerance",
+  "cases": {
+    "owned-normal-right": { "initial": "normal", "edge": "right", "widthDip": 440, "adjustDip": 560, "expected": "tile-adjust-restore", "difficulty": "baseline" },
+    "owned-normal-left": { "initial": "normal", "edge": "left", "widthDip": 440, "adjustDip": 360, "expected": "tile-adjust-restore", "difficulty": "baseline" },
+    "owned-maximized": { "initial": "maximized", "edge": "right", "widthDip": 440, "adjustDip": 500, "expected": "tile-adjust-restore-maximized", "difficulty": "state" },
+    "owned-minimized": { "initial": "minimized", "expected": "refuse-without-changing", "difficulty": "state" },
+    "owned-minimum-size": { "initial": "normal", "minimumWidthPx": 2200, "expected": "refuse-or-detect-and-restore", "difficulty": "constraint" },
+    "stale-identity": { "initial": "normal", "expected": "refuse-pid-or-creation-time-mismatch", "difficulty": "race" },
+    "closed-window": { "initial": "normal", "expected": "window-missing-not-access-denied", "difficulty": "race" }
+  },
+  "manual_gates": {
+    "vscode": "enumerate-tile-adjust-restore",
+    "chrome": "enumerate-tile-adjust-restore",
+    "bilibili": "enumerate-tile-adjust-restore",
+    "dpi100": "physical display scale 100%",
+    "dpi125": "physical display scale 125%",
+    "dpi150": "physical display scale 150%",
+    "dual-monitor": "different physical monitors, including negative origins and mixed scaling",
+    "elevated-window": "ordinary caller refuses elevated or inaccessible target without changing it"
+  }
+}

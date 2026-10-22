@@ -154,6 +154,10 @@ export interface OutgoingImage {
   name: string
   mime: string
   dataUrl: string
+  /** Capture attachments have a larger local size allowance than composer-picked images. */
+  kind?: 'capture'
+  /** Which capture variant this image represents; absent for ordinary composer images. */
+  captureVariant?: 'thumbnail' | 'original'
 }
 
 /** What is stored on the message row and used to reload the picture later. */
@@ -162,6 +166,154 @@ export interface MessageAttachment {
   name: string
   mime: string
   bytes: number
+  captureVariant?: 'thumbnail' | 'original'
+}
+
+export type ScreenCaptureSourceKind = 'screen' | 'window' | 'internal'
+
+export interface ScreenCaptureSource {
+  id: string
+  name: string
+  kind: ScreenCaptureSourceKind
+  displayId: string | null
+  previewDataUrl: string
+  unavailableReason?: string
+}
+
+export interface ScreenCaptureFilter {
+  types?: ScreenCaptureSourceKind[]
+  excludedDisplayIds?: string[]
+  excludedWindowTitles?: string[]
+}
+
+export interface ScreenCaptureImage {
+  kind: 'thumbnail' | 'original'
+  name: string
+  mime: 'image/jpeg'
+  dataUrl: string
+  width: number
+  height: number
+  bytes: number
+}
+
+export interface ScreenCaptureResult {
+  source: ScreenCaptureSource
+  thumbnail: ScreenCaptureImage
+  original?: ScreenCaptureImage
+  originalDowngraded: boolean
+}
+
+export interface ScreenCaptureRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export interface RegionOverlayInit {
+  captureId: string
+  previewDataUrl: string
+  imageWidth: number
+  imageHeight: number
+}
+
+export type WindowMode = 'normal' | 'floating'
+export type WindowEdge = 'left' | 'right' | null
+
+export interface WindowUiState {
+  mode: WindowMode
+  collapsed: boolean
+  edge: WindowEdge
+  drawerWidth: number
+  maxDrawerWidth: number | null
+  shortcut: string | null
+  shortcutRegistered: boolean
+}
+
+export interface ExternalWindowRect {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
+export interface ExternalWindowPoint {
+  x: number
+  y: number
+}
+
+export interface ExternalWindowIdentity {
+  hwnd: string
+  pid: number
+  started: string
+}
+
+export interface ExternalWindowSummary {
+  identity: ExternalWindowIdentity
+  appName: string
+  title: string
+  bounds: ExternalWindowRect
+  minimized: boolean
+  maximized: boolean
+  eligible: boolean
+  unavailableReason: string | null
+}
+
+export interface ExternalWindowPlacement {
+  length: number
+  flags: number
+  showCmd: number
+  ptMinPosition: ExternalWindowPoint
+  ptMaxPosition: ExternalWindowPoint
+  rcNormalPosition: ExternalWindowRect
+}
+
+export interface ExternalWindowSnapshot {
+  window: ExternalWindowSummary
+  bounds: ExternalWindowRect
+  visibleBounds: ExternalWindowRect
+  placement: ExternalWindowPlacement
+}
+
+export type ExternalTilingStatus =
+  | 'idle'
+  | 'active'
+  | 'paused'
+  | 'restore-pending'
+  | 'error'
+
+export interface ExternalTilingState {
+  status: ExternalTilingStatus
+  selected: ExternalWindowSummary | null
+  expectedBounds: ExternalWindowRect | null
+  error: string | null
+  canRetile: boolean
+  pendingRestore: boolean
+}
+
+export interface MaterialPanelRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export type MaterialPanelStatus = 'closed' | 'loading' | 'ready' | 'error'
+
+export interface MaterialPanelState {
+  status: MaterialPanelStatus
+  url: string
+  title: string
+  canGoBack: boolean
+  canGoForward: boolean
+  error: string | null
+  zoom?: number
+  minZoom?: number
+}
+
+export interface MaterialLocalFile {
+  url: string
+  name: string
 }
 
 export interface StartChatResult {

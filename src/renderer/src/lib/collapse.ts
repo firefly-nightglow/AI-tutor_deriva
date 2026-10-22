@@ -41,22 +41,31 @@ export function expandCollapsed(
   return next
 }
 
-/** The bookmark rail's collapsed preference is a global UI choice, shared by every pane. */
-export function readRailCollapsed(storage: Pick<Storage, 'getItem'> | null): boolean {
+/** Bookmark rails collapse independently, so the preference is a set of conversation ids. */
+export function readCollapsedRails(storage: Pick<Storage, 'getItem'> | null): Set<string> {
   try {
-    return storage?.getItem(RAIL_KEY) === '1'
+    const raw = storage?.getItem(RAIL_KEY)
+    if (raw === null || raw === undefined) return new Set()
+    const parsed = JSON.parse(raw) as unknown
+    return Array.isArray(parsed)
+      ? new Set(parsed.filter((id): id is string => typeof id === 'string'))
+      : new Set()
   } catch {
-    return false
+    return new Set()
   }
 }
 
-export function saveRailCollapsed(
+export function saveCollapsedRails(
   storage: Pick<Storage, 'setItem'> | null,
-  collapsed: boolean
+  collapsed: ReadonlySet<string>
 ): void {
   try {
-    storage?.setItem(RAIL_KEY, collapsed ? '1' : '0')
+    storage?.setItem(RAIL_KEY, JSON.stringify([...collapsed]))
   } catch {
     // Storage unavailable: the state still applies for this session.
   }
+}
+
+export function toggleCollapsedRail(current: ReadonlySet<string>, id: string): Set<string> {
+  return toggleCollapsed(current, id)
 }

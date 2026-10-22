@@ -17,6 +17,7 @@ export function focusAfterClose(open: readonly string[], closedId: string): stri
 }
 
 export const MIN_PANE_WIDTH = 280
+export const MIN_PANE_HEIGHT = 160
 
 /**
  * Widths for the two panes adjacent to a divider after dragging it by `delta` pixels: the left pane
@@ -45,14 +46,14 @@ export function resizePanes(
 }
 
 /**
- * The width to apply to one pane. A lone pane always fills the area, and a width chosen for a
- * different pane set must not leak into the current one.
+ * The explicit size to apply to one pane. A lone pane always fills the area, and a size chosen for
+ * a different pane set must not leak into the current one.
  */
-export function paneWidthFor(
-  widths: Readonly<Record<string, number>>,
+export function paneSizeFor(
+  sizes: Readonly<Record<string, number>>,
   paneId: string,
   openCount: number
 ): number | undefined {
   if (openCount < 2) return undefined
-  return widths[paneId]
+  return sizes[paneId]
 }

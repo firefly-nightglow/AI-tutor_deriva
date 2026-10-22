@@ -1,0 +1,22 @@
+{
+  "name": "deriva-window-geometry-spike",
+  "version": "0.0.0",
+  "private": true,
+  "main": "pipeline/electron.cjs",
+  "dependencies": {
+    "koffi": "3.3.3",
+    "@koromix/koffi-win32-x64": "3.3.3"
+  },
+  "build": {
+    "appId": "com.deriva.windowgeometry.spike",
+    "productName": "Deriva Window Spike",
+    "electronVersion": "39.8.10",
+    "npmRebuild": false,
+    "directories": {
+      "output": "../../node_modules/.cache/deriva-tiling-package"
+    },
+    "files": ["pipeline/**/*", "fixtures/golden.json"],
+    "asarUnpack": ["**/*.node"],
+    "win": { "signAndEditExecutable": false }
+  }
+}

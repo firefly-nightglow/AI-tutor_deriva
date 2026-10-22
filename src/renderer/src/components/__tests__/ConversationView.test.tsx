@@ -57,6 +57,10 @@ function render(overrides: Partial<React.ComponentProps<typeof ConversationView>
 }
 
 describe('ConversationView', () => {
+  it('offers a screenshot question entry in the composer', () => {
+    expect(render()).toContain('截图')
+  })
+
   it('renders assistant answers as markdown with math and shows the model badge', () => {
     const html = render({
       messages: [

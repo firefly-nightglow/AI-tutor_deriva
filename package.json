@@ -1,6 +1,6 @@
 {
   "name": "deriva",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Deriva desktop learning assistant",
   "main": "./out/main/index.js",
   "author": "deriva",
@@ -14,11 +14,18 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "test": "vitest run",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win": "npm run build && electron-builder --win"
+    "build:win": "npm run build && electron-builder --win",
+    "compile:tiling-smoke": "esbuild scripts/external-tiling-app-smoke.ts --bundle --platform=node --external:electron --external:koffi --format=cjs --outfile=out/main/external-tiling-app-smoke.cjs",
+    "smoke:tiling": "npm run build && npm run compile:tiling-smoke && electron out/main/external-tiling-app-smoke.cjs",
+    "accept:tiling": "npm run build && npm run compile:tiling-smoke && node scripts/run-external-tiling-acceptance.cjs",
+    "measure:tiling-block": "npm run build && esbuild scripts/external-tiling-blocking-smoke.ts --bundle --platform=node --external:electron --external:koffi --format=cjs --outfile=out/main/external-tiling-blocking-smoke.cjs && electron out/main/external-tiling-blocking-smoke.cjs",
+    "smoke:tiling-packaged-worker": "esbuild scripts/packaged-tiling-worker-smoke.ts --bundle --platform=node --external:electron --external:koffi --format=cjs --outfile=out/main/packaged-tiling-worker-smoke.cjs && electron out/main/packaged-tiling-worker-smoke.cjs"
   },
   "dependencies": {
+    "@koromix/koffi-win32-x64": "3.3.3",
     "@electron-toolkit/utils": "^4.0.0",
-    "better-sqlite3": "^13.0.3"
+    "better-sqlite3": "^13.0.3",
+    "koffi": "3.3.3"
   },
   "devDependencies": {
     "@dagrejs/dagre": "^3.1.1",
@@ -57,7 +64,9 @@
       "!out/**/*.map"
     ],
     "asarUnpack": [
-      "**/node_modules/better-sqlite3/**"
+      "**/node_modules/better-sqlite3/**",
+      "**/node_modules/@koromix/koffi-win32-x64/**",
+      "**/node_modules/koffi/**"
     ],
     "win": {
       "target": [

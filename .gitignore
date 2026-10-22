@@ -16,3 +16,18 @@ dist/
 secrets/
 credentials/
 .DS_Store
+
+# Private references, screenshots and local evidence
+/灵感*/
+/异常复核/
+/字幕抓取与总结模板/
+/.agentic/reviews/
+/.vscode/
+**/.cache/
+**/artifacts/
+**/debug/
+**/eval/results.json
+api-key.json
+window-state.json
+external-tiling.json
+deriva-data/

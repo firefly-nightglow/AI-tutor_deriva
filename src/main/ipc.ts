@@ -4,6 +4,11 @@ import type { CreateConversationInput, LlmConfig, StartChatInput } from '../shar
 import type { Repositories } from './db/repositories'
 import type { ApiKeyStore, ChatService, LlmConfigStore } from './llm'
 import type { AttachmentStore } from './attachments'
+import type { ScreenCapture } from './capture'
+import type { RegionSelector } from './capture/region-selector'
+import type { WindowModeManager } from './window-mode'
+import type { MaterialPanelController } from './material/panel'
+import type { ExternalTilingService } from './tiling/service'
 import { parseMessageAttachments } from '../shared/attachments'
 import type { ConversationNode } from '../shared/types'
 
@@ -31,7 +36,12 @@ function attachmentIdsInTree(
 export function registerIpcHandlers(
   repositories: Repositories,
   databasePath: string,
-  llm: LlmIpcDependencies
+  llm: LlmIpcDependencies,
+  capture: ScreenCapture,
+  regionSelector: RegionSelector,
+  windowManager: () => WindowModeManager | null,
+  materialPanel: () => MaterialPanelController | null,
+  externalTiling: () => ExternalTilingService | null
 ): void {
   ipcMain.handle(IPC_CHANNELS.databasePath, () => databasePath)
   ipcMain.handle(IPC_CHANNELS.subjectsList, () => repositories.subjects.list())
@@ -90,4 +100,90 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC_CHANNELS.llmChatCancel, (_event, requestId: string) => {
     llm.chatService.cancel(requestId)
   })
+  ipcMain.handle(IPC_CHANNELS.captureListSources, (_event, filter) => capture.listSources(filter))
+  ipcMain.handle(IPC_CHANNELS.captureSource, (_event, id: string, options) =>
+    capture.captureSource(id, options)
+  )
+  ipcMain.handle(IPC_CHANNELS.captureRegionSelect, (_event, sourceId: string) =>
+    regionSelector.start(sourceId)
+  )
+  ipcMain.handle(IPC_CHANNELS.captureRegionInit, (_event, displayId: string) =>
+    regionSelector.init(displayId)
+  )
+  ipcMain.handle(IPC_CHANNELS.captureRegionCommit, (_event, captureId: string, rect) =>
+    regionSelector.select(captureId, rect)
+  )
+  ipcMain.handle(IPC_CHANNELS.captureRegionCancel, () => regionSelector.cancel())
+  ipcMain.handle(IPC_CHANNELS.windowStateGet, () => windowManager()?.getState())
+  ipcMain.handle(IPC_CHANNELS.windowModeSet, (_event, mode) => windowManager()?.setMode(mode))
+  ipcMain.handle(IPC_CHANNELS.windowCollapse, () => windowManager()?.collapse())
+  ipcMain.handle(IPC_CHANNELS.windowExpand, () => windowManager()?.expand())
+  ipcMain.handle(IPC_CHANNELS.windowCollapseToggle, () => windowManager()?.toggleCollapsed())
+  ipcMain.handle(IPC_CHANNELS.windowDrawerWidth, (_event, width: number, commit: boolean) =>
+    windowManager()?.setDrawerWidth(width, commit)
+  )
+  ipcMain.on(IPC_CHANNELS.windowBubbleDragStart, (_event, screenY: number) =>
+    windowManager()?.bubbleDragStart(screenY)
+  )
+  ipcMain.on(IPC_CHANNELS.windowBubbleDragMove, (_event, screenY: number) =>
+    windowManager()?.bubbleDragMove(screenY)
+  )
+  ipcMain.on(IPC_CHANNELS.windowBubbleDragEnd, () => windowManager()?.bubbleDragEnd())
+  ipcMain.on(IPC_CHANNELS.windowBubbleContextMenu, () => windowManager()?.bubbleContextMenu())
+  ipcMain.handle(IPC_CHANNELS.windowShortcutSet, (_event, accelerator: string | null) =>
+    windowManager()?.setShortcut(accelerator)
+  )
+  ipcMain.handle(IPC_CHANNELS.windowMinimize, () => windowManager()?.minimize())
+  ipcMain.handle(IPC_CHANNELS.windowMaximizeToggle, () => windowManager()?.toggleMaximize())
+  ipcMain.handle(IPC_CHANNELS.windowClose, () => windowManager()?.close())
+  const requireExternalTiling = (): ExternalTilingService => {
+    const controller = externalTiling()
+    if (controller === null) throw new Error('外部应用并排当前不可用。')
+    return controller
+  }
+  ipcMain.handle(IPC_CHANNELS.externalTilingGetState, () =>
+    requireExternalTiling().getState()
+  )
+  ipcMain.handle(IPC_CHANNELS.externalTilingListWindows, () =>
+    requireExternalTiling().listWindows()
+  )
+  ipcMain.handle(IPC_CHANNELS.externalTilingSelect, async (_event, identity) => {
+    const controller = requireExternalTiling()
+    const preferredWidth = await controller.preferredDrawerWidth()
+    if (preferredWidth !== null) windowManager()?.setDrawerWidth(preferredWidth, true)
+    return controller.selectWindow(identity)
+  })
+  ipcMain.handle(IPC_CHANNELS.externalTilingRetile, () =>
+    requireExternalTiling().retile()
+  )
+  ipcMain.handle(IPC_CHANNELS.externalTilingStop, () =>
+    requireExternalTiling().stop()
+  )
+  ipcMain.handle(IPC_CHANNELS.externalTilingConfirmRestore, () =>
+    requireExternalTiling().confirmPendingRestore()
+  )
+  ipcMain.handle(IPC_CHANNELS.externalTilingDiscardRestore, () =>
+    requireExternalTiling().discardPendingRestore()
+  )
+  ipcMain.handle(IPC_CHANNELS.materialPanelOpen, (_event, url: string | null) =>
+    materialPanel()?.open(url)
+  )
+  ipcMain.handle(IPC_CHANNELS.materialPanelClose, () => materialPanel()?.close())
+  ipcMain.handle(IPC_CHANNELS.materialPanelNavigate, (_event, url: string) =>
+    materialPanel()?.navigate(url)
+  )
+  ipcMain.handle(IPC_CHANNELS.materialPanelReload, () => materialPanel()?.reload())
+  ipcMain.handle(IPC_CHANNELS.materialPanelGoBack, () => materialPanel()?.goBack())
+  ipcMain.handle(IPC_CHANNELS.materialPanelGoForward, () => materialPanel()?.goForward())
+  ipcMain.handle(IPC_CHANNELS.materialPanelStop, () => materialPanel()?.stop())
+  ipcMain.handle(IPC_CHANNELS.materialPanelZoom, (_event, factor: number) =>
+    materialPanel()?.setZoom(factor)
+  )
+  ipcMain.handle(IPC_CHANNELS.materialPanelPickFile, () => materialPanel()?.pickFile())
+  ipcMain.on(IPC_CHANNELS.materialPanelSetBounds, (_event, rect) =>
+    materialPanel()?.setBounds(rect)
+  )
+  ipcMain.on(IPC_CHANNELS.materialPanelSetVisible, (_event, visible: boolean) =>
+    materialPanel()?.setVisible(visible)
+  )
 }

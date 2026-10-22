@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { closePane, focusAfterClose, openPane, paneWidthFor, resizePanes } from '../paneList'
+import { closePane, focusAfterClose, openPane, paneSizeFor, resizePanes } from '../paneList'
 
 describe('pane list', () => {
   it('appends a pane once and keeps the open order', () => {
@@ -29,12 +29,12 @@ describe('pane list', () => {
     expect(resizePanes(300, 300, 200)).toEqual({ left: 320, right: 280 })
   })
 
-  it('ignores a stored width for a lone pane and for unknown panes', () => {
-    const widths = { a: 700, b: 400 }
+  it('ignores a stored size for a lone pane and for unknown panes', () => {
+    const sizes = { a: 700, b: 400 }
 
-    expect(paneWidthFor(widths, 'a', 1)).toBeUndefined()
-    expect(paneWidthFor(widths, 'a', 2)).toBe(700)
-    expect(paneWidthFor(widths, 'c', 2)).toBeUndefined()
+    expect(paneSizeFor(sizes, 'a', 1)).toBeUndefined()
+    expect(paneSizeFor(sizes, 'a', 2)).toBe(700)
+    expect(paneSizeFor(sizes, 'c', 2)).toBeUndefined()
   })
 
   it('redistributes between neighbours even when both start at the three-column basis', () => {

@@ -24,7 +24,7 @@ export const ConversationPane = memo(function ConversationPane({
   levelLabel: string
   branchSources: BranchSource[]
   railCollapsed: boolean
-  onToggleRail(): void
+  onToggleRail(id: string): void
   onConversationChanged(): void
   /** Id-addressed so App can hand over stable callbacks and memo keeps drags from re-rendering panes. */
   onOpenBranch(id: string, quote: string, sourceMessageId: string, visibleText: string): void
@@ -127,7 +127,7 @@ export const ConversationPane = memo(function ConversationPane({
       levelLabel={levelLabel}
       branchSources={branchSources}
       railCollapsed={railCollapsed}
-      onToggleRail={onToggleRail}
+      onToggleRail={() => onToggleRail(conversation.id)}
       onClose={() => onClose(conversation.id)}
       messages={messages}
       bookmarks={bookmarks}

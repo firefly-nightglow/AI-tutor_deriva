@@ -10,6 +10,7 @@ import { browserStorage, readDraft, saveDraft } from '../lib/drafts'
 import { branchRanges, overlaps, type BranchSource } from '../lib/branchMarks'
 import { MarkdownContent, markdownSource } from './MarkdownContent'
 import { MessageAttachments } from './MessageAttachments'
+import { ScreenshotDialog } from './ScreenshotDialog'
 
 const MAX_IMAGES = 4
 
@@ -62,6 +63,7 @@ export function ConversationView(props: ConversationViewProps): React.JSX.Elemen
   const [pendingAsk, setPendingAsk] = useState<PendingAsk | null>(null)
   const [images, setImages] = useState<OutgoingImage[]>([])
   const [imageNotice, setImageNotice] = useState('')
+  const [screenshotOpen, setScreenshotOpen] = useState(false)
   const [highlighted, setHighlighted] = useState<string | null>(null)
   const endRef = useRef<HTMLDivElement | null>(null)
   const messagesRef = useRef<HTMLDivElement | null>(null)
@@ -391,6 +393,14 @@ export function ConversationView(props: ConversationViewProps): React.JSX.Elemen
             图片
           </button>
           <button
+            type="button"
+            className="secondary"
+            disabled={props.streaming}
+            onClick={() => setScreenshotOpen(true)}
+          >
+            截图
+          </button>
+          <button
             type="submit"
             disabled={props.streaming || (draft.trim() === '' && images.length === 0)}
           >
@@ -406,6 +416,25 @@ export function ConversationView(props: ConversationViewProps): React.JSX.Elemen
           </button>
         </div>
       </form>
+
+      {screenshotOpen && (
+        <ScreenshotDialog
+          question={draft}
+          streaming={props.streaming}
+          onQuestionChange={(value) => {
+            setDraft(value)
+            saveDraft(browserStorage(), props.conversation.id, value)
+          }}
+          onClose={() => setScreenshotOpen(false)}
+          onSend={(image) => {
+            props.onSend(draft.trim(), [...images, image])
+            setDraft('')
+            setImages([])
+            saveDraft(browserStorage(), props.conversation.id, '')
+            setScreenshotOpen(false)
+          }}
+        />
+      )}
     </section>
   )
 }

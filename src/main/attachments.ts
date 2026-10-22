@@ -11,7 +11,13 @@ const ALLOWED: Record<string, string> = {
   'image/gif': 'gif'
 }
 const MIME_BY_EXTENSION = Object.fromEntries(Object.entries(ALLOWED).map(([mime, ext]) => [ext, mime]))
-const MAX_BYTES = 4 * 1024 * 1024
+export const ATTACHMENT_MAX_BYTES = 4 * 1024 * 1024
+export const CAPTURE_ATTACHMENT_MAX_BYTES = 8 * 1024 * 1024
+
+export interface AttachmentLimits {
+  regular?: number
+  capture?: number
+}
 
 export interface AttachmentStore {
   save(images: OutgoingImage[]): MessageAttachment[]
@@ -21,7 +27,13 @@ export interface AttachmentStore {
 }
 
 /** Images live as files beside the database; the message row keeps only metadata. */
-export function createAttachmentStore(directory: string): AttachmentStore {
+export function createAttachmentStore(
+  directory: string,
+  limits: AttachmentLimits = {}
+): AttachmentStore {
+  const regularLimit = limits.regular ?? ATTACHMENT_MAX_BYTES
+  const captureLimit = limits.capture ?? CAPTURE_ATTACHMENT_MAX_BYTES
+
   function find(id: string): string | null {
     if (!existsSync(directory)) return null
     const prefix = `${id}.`
@@ -39,11 +51,24 @@ export function createAttachmentStore(directory: string): AttachmentStore {
         const base64 = image.dataUrl.replace(/^data:[^;]+;base64,/, '')
         const buffer = Buffer.from(base64, 'base64')
         if (buffer.byteLength === 0) throw new ValidationError('图片内容为空')
-        if (buffer.byteLength > MAX_BYTES) throw new ValidationError('单张图片不能超过 4 MB')
+        const maxBytes = image.kind === 'capture' ? captureLimit : regularLimit
+        if (buffer.byteLength > maxBytes) {
+          throw new ValidationError(
+            image.kind === 'capture' ? '单张截图不能超过 8 MB' : '单张图片不能超过 4 MB'
+          )
+        }
 
         const id = randomUUID()
         writeFileSync(join(directory, `${id}.${extension}`), buffer)
-        return { id, name: image.name, mime: image.mime, bytes: buffer.byteLength }
+        return {
+          id,
+          name: image.name,
+          mime: image.mime,
+          bytes: buffer.byteLength,
+          ...(image.captureVariant === undefined
+            ? {}
+            : { captureVariant: image.captureVariant })
+        }
       })
     },
     read(id) {

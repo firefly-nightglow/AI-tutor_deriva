@@ -109,7 +109,7 @@ describe('ConversationView bookmarks rail', () => {
   })
 
   it('hides the entries when collapsed and asks the app to toggle', () => {
-    // The collapsed state lives in App so every pane agrees; here we only assert the presentation.
+    // App owns the per-conversation collapsed set; here we only assert the rail presentation.
     const onToggleRail = vi.fn()
     renderView({ railCollapsed: true, onToggleRail })
 

@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   expandCollapsed,
   readCollapsed,
-  readRailCollapsed,
+  readCollapsedRails,
   saveCollapsed,
-  saveRailCollapsed,
+  saveCollapsedRails,
+  toggleCollapsedRail,
   toggleCollapsed
 } from '../collapse'
 
@@ -44,11 +45,12 @@ describe('collapsed nodes', () => {
     expect(expandCollapsed(current, ['x'])).toBe(current)
   })
 
-  it('round-trips the bookmark rail preference', () => {
+  it('round-trips bookmark rail collapse per conversation', () => {
     const storage = storageOf()
-    expect(readRailCollapsed(storage)).toBe(false)
-    saveRailCollapsed(storage, true)
-    expect(readRailCollapsed(storage)).toBe(true)
-    expect(() => saveRailCollapsed(null, true)).not.toThrow()
+    expect([...readCollapsedRails(storage)]).toEqual([])
+    saveCollapsedRails(storage, new Set(['a']))
+    expect([...readCollapsedRails(storage)]).toEqual(['a'])
+    expect([...toggleCollapsedRail(new Set(['a']), 'b')].sort()).toEqual(['a', 'b'])
+    expect(() => saveCollapsedRails(null, new Set(['a']))).not.toThrow()
   })
 })
